@@ -111,7 +111,16 @@ async function startCrawling() {
 
 await sendEmail({
   from: "goncalojferreira92@gmail.com",
-  to: "goncalojferreira92@gmail.com",
-  subject: "test",
-  html: "<div>This is the body of the email</div>",
+  to: "veronique.kuperstein@gmail.com",
+  subject: "Found a new thing at Vesteda",
+  html: `
+     <h4>Let's submit! Our app found something here:</h4>
+     <ul>
+          <li>${"Vesteda link 1"}</li>
+          <li>${"Vesteda link 2"}</li>
+          <li>${"Vesteda link 3"}</li>
+     </ul>
+
+     Lessagooo!! 👏
+  `,
 });

@@ -34,16 +34,3 @@ export default async function sendEmail({
   }
 };
 
-// (async () => {
-//   try {
-//     await sendEmail(
-//       "goncalojferreira92@gmail.com",
-//       "goncalojferreira92@gmail.com",
-//       "Found a new thing!",
-//       "<b>This is the email body</b>"
-//     );
-//     console.log("Email sent successfully!");
-//   } catch (error) {
-//     console.error("Error sending email:", error);
-//   }
-// })();
