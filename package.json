@@ -3,12 +3,14 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/nodemailer": "^6.4.15"
   },
   "peerDependencies": {
     "typescript": "5.0.0"
   },
   "dependencies": {
+    "nodemailer": "^6.9.14",
     "puppeteer": "22.12.1"
   }
 }
