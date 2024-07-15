@@ -135,7 +135,7 @@ async function startCrawling() {
   }
 }
 
-await startCrawling();
+// await startCrawling();
 
 async function sendEmails(agencyProperties: AgencyProperty) {
   try {
@@ -171,3 +171,7 @@ async function sendEmails(agencyProperties: AgencyProperty) {
     } else console.error("Could not identify the error type.");
   }
 }
+
+const testEmail:AgencyProperty = new Map([[Agency.Vesteda, ['message1']]]);
+
+await sendEmails(testEmail);
