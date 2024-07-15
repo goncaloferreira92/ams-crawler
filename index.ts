@@ -4,6 +4,9 @@ import sendEmail from "./sendEmail";
 const vestedaUrl =
   "https://www.vesteda.com/en/unit-search?placeType=1&sortType=1&radius=20&s=Amsterdam&sc=woning&latitude=52.36757278442383&longitude=4.904139041900635&filters=&priceFrom=500&priceTo=1500";
 
+const parariusUrl =
+  "https://www.pararius.com/apartments/amsterdam/1000-1500/upholstered";
+
 const vestedaClassNames = [
   ".o-card",
   ".o-card--listview",
@@ -76,7 +79,6 @@ async function crawlPage() {
         }
 
         console.info(Array.from(warningMessages.keys()));
-        //    console.info("Did not find anything new :)");
 
         // Creating a new set
       } else {
@@ -109,18 +111,33 @@ async function startCrawling() {
 
 // startCrawling();
 
-await sendEmail({
-  from: "goncalojferreira92@gmail.com",
-  to: "veronique.kuperstein@gmail.com",
-  subject: "Found a new thing at Vesteda",
-  html: `
-     <h4>Let's submit! Our app found something here:</h4>
-     <ul>
-          <li>${"Vesteda link 1"}</li>
-          <li>${"Vesteda link 2"}</li>
-          <li>${"Vesteda link 3"}</li>
-     </ul>
+enum Agency {
+  Vesteda = "Vesteda",
+  Pararius = "Pararius",
+  Funda = "Funda",
+}
 
-     Lessagooo!! 👏
-  `,
-});
+type AgencyProperty = Map<Agency, string[]>;
+
+async function sendEmails(agencyProperties: AgencyProperty) {
+  const html = ["<h4>Let's submit! Our app found something here:</h4>"];
+  for (const [agency, properties] of agencyProperties.entries()) {
+    const agencyPropertyHtml = `<span>${agency}:</span>
+             <ul>${properties.map(
+               (property) => `<li>Name: ${property}</li>`
+             )}</ul>`;
+    html.push(agencyPropertyHtml);
+  }
+  await sendEmail({
+    from: "goncalojferreira92@gmail.com",
+    to: "goncalojferreira92@gmail.com",
+    subject: `Found a new for Amsterdam!`,
+    html: html.join("\n"),
+  });
+}
+
+const test: AgencyProperty = new Map([
+  [Agency.Vesteda, ["Vesteda 1", "Vesteda 2"]],
+]);
+
+await sendEmails(test);
