@@ -1,4 +1,4 @@
-import puppeteer, { ElementHandle, Page } from "puppeteer";
+import puppeteer, { ElementHandle, Page } from "puppeteer-core";
 import sendEmail from "./sendEmail";
 
 const vestedaUrl =
@@ -55,15 +55,17 @@ async function createNewSet(page: Page) {
   return newElements;
 }
 
-function testDeletePropertyToCheck() {
-  // Test deleting an element to check if it will send a message
-  const spanTextsKeys = Array.from(spanTexts.keys());
-  spanTextsKeys.splice(3, 5);
-  return spanTextsKeys;
-}
+// function testDeletePropertyToCheck() {
+//   // Test deleting an element to check if it will send a message
+//   const spanTextsKeys = Array.from(spanTexts.keys());
+//   spanTextsKeys.splice(3, 5);
+//   return spanTextsKeys;
+// }
 
 async function crawlPage() {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    executablePath: '/usr/bin/chromium-browser',
+  });
   const page = await browser.newPage();
 
   try {
@@ -74,7 +76,7 @@ async function crawlPage() {
     if (elements != null) {
       // If the set already exists:
       if (spanTexts.size > 0) {
-        console.info("Checking if there are changes in set...");
+        console.info("Checking if there are changes in the property list...");
 
         let newElements: Set<string> = new Set<string>();
 
