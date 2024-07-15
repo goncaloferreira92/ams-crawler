@@ -135,7 +135,7 @@ async function startCrawling() {
   }
 }
 
-// await startCrawling();
+await startCrawling();
 
 async function sendEmails(agencyProperties: AgencyProperty) {
   try {
@@ -172,6 +172,6 @@ async function sendEmails(agencyProperties: AgencyProperty) {
   }
 }
 
-const testEmail:AgencyProperty = new Map([[Agency.Vesteda, ['message1']]]);
-
-await sendEmails(testEmail);
+// TODO Goncalo -> to test! :)
+// const testEmail:AgencyProperty = new Map([[Agency.Vesteda, ['message1']]]);
+// await sendEmails(testEmail);
