@@ -15,18 +15,33 @@ const vestedaClassNames = [
   ".o-card--shadow-small",
 ];
 
+enum Agency {
+  Vesteda = "Vesteda",
+  Pararius = "Pararius",
+  Funda = "Funda",
+}
+
+type AgencyProperty = Map<Agency, string[]>;
+
 let spanTexts: Set<string> = new Set<string>();
 
-// async function addElementsToSet(elements: ElementHandle<any>[]) {
-//   for (const span of elements) {
-//     if (span != null) {
-//       const spanText = await span.evaluate((el) => el.textContent);
-//       //  if (typeof spanText === "string" && !spanTexts.has(spanText)) {
-//       //    spanTexts.add(spanText);
-//       //  };
-//     }
-//   }
-// }
+async function resetAndCreateNewSetOfElements(elements: ElementHandle<any>[]) {
+  console.info("resetting db...");
+  // Reset the set of elements from scratch
+  spanTexts = new Set<string>();
+
+  // Push new elements to the set
+  for (const span of elements) {
+    if (span != null) {
+      const spanText = await span.evaluate(
+        (el: { textContent: string }) => el.textContent
+      );
+      if (typeof spanText === "string" && !spanTexts.has(spanText)) {
+        spanTexts.add(spanText);
+      }
+    }
+  }
+}
 
 async function createNewSet(page: Page) {
   const firstFilter = await page.$$(vestedaClassNames.join(""));
@@ -40,15 +55,12 @@ async function createNewSet(page: Page) {
   return newElements;
 }
 
-// async function checkIfThereAreChangesInSet(elements: ElementHandle<any>[]) {
-//   for (const span of elements) {
-//     //     const spanText = await span.evaluate((el) => el.textContext);
-//     //     if (spanText && !spanTexts.has(spanText)) {
-//     //       console.info("Found one!");
-//     //     }
-//   }
-//   console.info("Did not find anything new :)");
-// }
+function testDeletePropertyToCheck() {
+  // Test deleting an element to check if it will send a message
+  const spanTextsKeys = Array.from(spanTexts.keys());
+  spanTextsKeys.splice(3, 5);
+  return spanTextsKeys;
+}
 
 async function crawlPage() {
   const browser = await puppeteer.launch();
@@ -63,34 +75,46 @@ async function crawlPage() {
       // If the set already exists:
       if (spanTexts.size > 0) {
         console.info("Checking if there are changes in set...");
-        // checkIfThereAreChangesInSet(elements);
 
-        // Test deleting an element to check if it will send a message
+        let newElements: Set<string> = new Set<string>();
+
+        // TODO Goncalo -> TEST for new elements
+        // const spanTextsKeys = testDeletePropertyToCheck();
+
         const spanTextsKeys = Array.from(spanTexts.keys());
-        spanTextsKeys.splice(3, 5);
-
-        let warningMessages: Set<string> = new Set<string>();
 
         for (const span of elements) {
           const spanText = await span.evaluate((el) => el.textContent);
           if (spanText && !spanTextsKeys.includes(spanText)) {
-            warningMessages.add(`Warning message ${warningMessages.size + 1}`);
+            newElements.add(spanText);
           }
         }
 
-        console.info(Array.from(warningMessages.keys()));
+        if (newElements.size > 0) {
+          const agencyProperties: AgencyProperty = new Map();
+          const newElementsArray = Array.from(newElements.values());
+
+          console.log(newElementsArray);
+          for (const newElement of newElementsArray) {
+            const previous = agencyProperties.get(Agency.Vesteda);
+            if (!previous) {
+              agencyProperties.set(Agency.Vesteda, [newElement]);
+            } else {
+              agencyProperties.set(Agency.Vesteda, [...previous, newElement]);
+            }
+          }
+
+          await sendEmails(agencyProperties);
+
+          // Reset and create new set
+          console.info('resetting...');
+          spanTexts = new Set();
+          // await resetAndCreateNewSetOfElements(elements);
+        }
 
         // Creating a new set
       } else {
-        //    addElementsToSet(elements);
-        for (const span of elements) {
-          if (span != null) {
-            const spanText = await span.evaluate((el) => el.textContent);
-            if (typeof spanText === "string" && !spanTexts.has(spanText)) {
-              spanTexts.add(spanText);
-            }
-          }
-        }
+        await resetAndCreateNewSetOfElements(elements);
       }
     }
   } catch (error) {
@@ -105,39 +129,43 @@ async function startCrawling() {
   while (true) {
     console.info("Crawling page...");
     await crawlPage();
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 60000));
   }
 }
 
-// startCrawling();
-
-enum Agency {
-  Vesteda = "Vesteda",
-  Pararius = "Pararius",
-  Funda = "Funda",
-}
-
-type AgencyProperty = Map<Agency, string[]>;
+await startCrawling();
 
 async function sendEmails(agencyProperties: AgencyProperty) {
-  const html = ["<h4>Let's submit! Our app found something here:</h4>"];
-  for (const [agency, properties] of agencyProperties.entries()) {
-    const agencyPropertyHtml = `<span>${agency}:</span>
-             <ul>${properties.map(
-               (property) => `<li>Name: ${property}</li>`
-             )}</ul>`;
-    html.push(agencyPropertyHtml);
+  try {
+    console.info("Found new properties! Sending emails...");
+    const html = ["<h4>Let's submit! Our app found something here:</h4>"];
+    for (const [agency, properties] of agencyProperties.entries()) {
+      const agencyPropertyHtml = `<span>${agency}:</span>
+               <ul>${properties.map(
+                 (property) => `<li>Property name: ${property}</li>`
+               ).join('')}</ul>`;
+      html.push(agencyPropertyHtml);
+    }
+
+    await sendEmail({
+      from: "goncalojferreira92@gmail.com",
+      to: "goncalojferreira92@gmail.com",
+      subject: `Found a new for Amsterdam!`,
+      html: html.join("\n"),
+    });
+
+    await sendEmail({
+      from: "goncalojferreira92@gmail.com",
+      to: "veronique.kuperstein@gmail.com",
+      subject: `Found a new for Amsterdam!`,
+      html: html.join("\n"),
+    });
+
+    console.info("Emails successfully sent! 👏");
+  } catch (err) {
+    console.error(new Error("Could not send emails"));
+    if (err instanceof Error) {
+      console.error(err);
+    } else console.error("Could not identify the error type.");
   }
-  await sendEmail({
-    from: "goncalojferreira92@gmail.com",
-    to: "goncalojferreira92@gmail.com",
-    subject: `Found a new for Amsterdam!`,
-    html: html.join("\n"),
-  });
 }
-
-const test: AgencyProperty = new Map([
-  [Agency.Vesteda, ["Vesteda 1", "Vesteda 2"]],
-]);
-
-await sendEmails(test);

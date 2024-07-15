@@ -2,6 +2,9 @@
   "name": "crawler",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "build": "bun build --compile ./index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/nodemailer": "^6.4.15"
