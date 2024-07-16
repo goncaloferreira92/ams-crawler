@@ -56,7 +56,7 @@ async function createNewSet(page: Page) {
 
 async function crawlPage() {
   const browser = await puppeteer.launch({
-    executablePath: "/usr/bin/chromium-browser",
+    executablePath: "/snap/chromium",
   });
   const page = await browser.newPage();
 
