@@ -18,3 +18,7 @@ export function randomTimeRange(bottomBoundaryS = 60, upperBoundaryS = 120): num
     Number(randomValue.toFixed(DECIMAL_PLACES)) * MS_RATIO;
   return randomValueMs;
 }
+
+export function infoWithDate(message: string) {
+  console.info(new Date().toISOString() + ": " + message);
+}

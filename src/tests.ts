@@ -1,9 +1,9 @@
-import { sendEmails } from ".";
-import { Agency, type AgencyProperty } from "./types";
+// import { sendAllEmails } from "./email_service/sendAllEmails";
+// import { Agency, type AgencyProperty } from "./types";
 
 // Test sending an email with dummy data
-const testEmail: AgencyProperty = new Map([[Agency.Vesteda, ["message1"]]]);
-await sendEmails(testEmail);
+// const testEmail: AgencyProperty = new Map([[Agency.Vesteda, ["Property name 01"]]]);
+// await sendAllEmails(testEmail);
 
 // Test removing a property so the script will have to detect the difference.
 export function testDeletePropertyToCheck(spanTexts: Set<string>) {

@@ -1,22 +1,10 @@
-// import puppeteer, { ElementHandle, Page } from "puppeteer";
-import puppeteer, { ElementHandle, Page } from "puppeteer-core";
-import sendEmail from "../sendEmail";
+import puppeteer, { ElementHandle, Page } from "puppeteer";
+// import puppeteer, { ElementHandle, Page } from "puppeteer-core";
 import { randomTimeRange } from "./helpers";
 import { Agency, type AgencyProperty } from "./types";
-
-const vestedaUrl =
-  "https://www.vesteda.com/en/unit-search?placeType=1&sortType=1&radius=20&s=Amsterdam&sc=woning&latitude=52.36757278442383&longitude=4.904139041900635&filters=&priceFrom=500&priceTo=1500";
-
-const parariusUrl =
-  "https://www.pararius.com/apartments/amsterdam/1000-1500/upholstered";
-
-const vestedaClassNames = [
-  ".o-card",
-  ".o-card--listview",
-  ".o-card--listing",
-  ".o-card--clickable",
-  ".o-card--shadow-small",
-];
+import { sendAllEmails } from "./email_service/sendAllEmails";
+import { VESTEDA_CLASS_NAMES, VESTEDA_SEARCH_URL } from "./constants";
+import { testDeletePropertyToCheck } from "./tests";
 
 function infoWithDate(message: string) {
   console.info(new Date().toISOString() + ": " + message);
@@ -43,7 +31,7 @@ async function resetAndCreateNewSetOfElements(elements: ElementHandle<any>[]) {
 }
 
 async function createNewSet(page: Page) {
-  const firstFilter = await page.$$(vestedaClassNames.join(""));
+  const firstFilter = await page.$$(VESTEDA_CLASS_NAMES.join(""));
   const newElements: ElementHandle<any>[] = [];
   if (firstFilter && firstFilter.length > 0) {
     for (const filteredElement of firstFilter) {
@@ -56,12 +44,12 @@ async function createNewSet(page: Page) {
 
 async function crawlPage() {
   const browser = await puppeteer.launch({
-    executablePath: "/usr/bin/chromium-browser",
+    // executablePath: "/usr/bin/chromium-browser",
   });
   const page = await browser.newPage();
 
   try {
-    await page.goto(vestedaUrl);
+    await page.goto(VESTEDA_SEARCH_URL);
 
     const elements = await createNewSet(page);
 
@@ -74,6 +62,9 @@ async function crawlPage() {
 
         const spanTextsKeys = Array.from(spanTexts.keys());
 
+        // Test
+        // const spanTextsKeys = testDeletePropertyToCheck(spanTexts);
+
         for (const span of elements) {
           const spanText = await span.evaluate((el) => el.textContent);
           if (spanText && !spanTextsKeys.includes(spanText)) {
@@ -85,7 +76,8 @@ async function crawlPage() {
           const agencyProperties: AgencyProperty = new Map();
           const newElementsArray = Array.from(newElements.values());
 
-          console.log(newElementsArray);
+          console.info("New elements: ", newElementsArray);
+
           for (const newElement of newElementsArray) {
             const previous = agencyProperties.get(Agency.Vesteda);
             if (!previous) {
@@ -95,7 +87,7 @@ async function crawlPage() {
             }
           }
 
-          await sendEmails(agencyProperties);
+          await sendAllEmails(agencyProperties);
 
           // Reset and create new set
           infoWithDate("Resetting data as we found an actual property :) ...");
@@ -120,52 +112,10 @@ async function startCrawling() {
   while (true) {
     infoWithDate("Crawling page...");
     await crawlPage();
-    const randomIntervalMs = randomTimeRange(60, 120); // between 1 and 2 minutes
+    const randomIntervalMs = randomTimeRange(3, 4); // between 1 and 2 minutes
     console.log(randomIntervalMs);
     await new Promise((resolve) => setTimeout(resolve, randomIntervalMs));
   }
 }
 
 await startCrawling();
-
-export async function sendEmails(agencyProperties: AgencyProperty) {
-  try {
-    infoWithDate("Found new properties! Sending emails...");
-    const html = ["<h4>Let's submit! Our app found something here:</h4>"];
-    for (const [agency, properties] of agencyProperties.entries()) {
-      const agencyPropertyHtml = `<span>${agency}:</span>
-               <ul>${properties
-                 .map((property) => `<li>Property name: ${property}</li>`)
-                 .join("")}</ul>`;
-      html.push(agencyPropertyHtml);
-    }
-
-    await sendEmail({
-      from: "goncalojferreira92@gmail.com",
-      to: "goncalojferreira92@gmail.com",
-      subject: `Found a new for Amsterdam!`,
-      html: html.join("\n"),
-    });
-
-    await sendEmail({
-      from: "goncalojferreira92@gmail.com",
-      to: "veronique.kuperstein@gmail.com",
-      subject: `Found a new for Amsterdam!`,
-      html: html.join("\n"),
-    });
-
-    infoWithDate("Emails successfully sent! 👏");
-  } catch (err) {
-    console.error(
-      new Error(new Date().toISOString() + ": Could not send emails")
-    );
-    if (err instanceof Error) {
-      console.error(err);
-    } else
-      console.error(
-        new Error(
-          new Date().toISOString() + ": Could not identify the error type."
-        )
-      );
-  }
-}
