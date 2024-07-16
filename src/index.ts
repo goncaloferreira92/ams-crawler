@@ -1,6 +1,8 @@
 // import puppeteer, { ElementHandle, Page } from "puppeteer";
 import puppeteer, { ElementHandle, Page } from "puppeteer-core";
-import sendEmail from "./sendEmail";
+import sendEmail from "../sendEmail";
+import { randomTimeRange } from "./helpers";
+import { Agency, type AgencyProperty } from "./types";
 
 const vestedaUrl =
   "https://www.vesteda.com/en/unit-search?placeType=1&sortType=1&radius=20&s=Amsterdam&sc=woning&latitude=52.36757278442383&longitude=4.904139041900635&filters=&priceFrom=500&priceTo=1500";
@@ -16,17 +18,9 @@ const vestedaClassNames = [
   ".o-card--shadow-small",
 ];
 
-enum Agency {
-  Vesteda = "Vesteda",
-  Pararius = "Pararius",
-  Funda = "Funda",
-}
-
 function infoWithDate(message: string) {
   console.info(new Date().toISOString() + ": " + message);
 }
-
-type AgencyProperty = Map<Agency, string[]>;
 
 let spanTexts: Set<string> = new Set<string>();
 
@@ -60,13 +54,6 @@ async function createNewSet(page: Page) {
   return newElements;
 }
 
-// function testDeletePropertyToCheck() {
-//   // Test deleting an element to check if it will send a message
-//   const spanTextsKeys = Array.from(spanTexts.keys());
-//   spanTextsKeys.splice(3, 5);
-//   return spanTextsKeys;
-// }
-
 async function crawlPage() {
   const browser = await puppeteer.launch({
     executablePath: "/usr/bin/chromium-browser",
@@ -84,9 +71,6 @@ async function crawlPage() {
         infoWithDate("Checking if there are changes in the property list...");
 
         let newElements: Set<string> = new Set<string>();
-
-        // TODO Goncalo -> TEST for new elements
-        // const spanTextsKeys = testDeletePropertyToCheck();
 
         const spanTextsKeys = Array.from(spanTexts.keys());
 
@@ -114,7 +98,7 @@ async function crawlPage() {
           await sendEmails(agencyProperties);
 
           // Reset and create new set
-          infoWithDate("resetting...");
+          infoWithDate("Resetting data as we found an actual property :) ...");
           spanTexts = new Set();
           // await resetAndCreateNewSetOfElements(elements);
         }
@@ -136,13 +120,15 @@ async function startCrawling() {
   while (true) {
     infoWithDate("Crawling page...");
     await crawlPage();
-    await new Promise((resolve) => setTimeout(resolve, 60000));
+    const randomInterval = randomTimeRange(2, 4);
+    console.log(randomInterval);
+    await new Promise((resolve) => setTimeout(resolve, randomInterval));
   }
 }
 
 await startCrawling();
 
-async function sendEmails(agencyProperties: AgencyProperty) {
+export async function sendEmails(agencyProperties: AgencyProperty) {
   try {
     infoWithDate("Found new properties! Sending emails...");
     const html = ["<h4>Let's submit! Our app found something here:</h4>"];
@@ -183,7 +169,3 @@ async function sendEmails(agencyProperties: AgencyProperty) {
       );
   }
 }
-
-// TODO Goncalo -> to test! :)
-// const testEmail:AgencyProperty = new Map([[Agency.Vesteda, ['message1']]]);
-// await sendEmails(testEmail);
