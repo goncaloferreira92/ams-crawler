@@ -1,3 +1,4 @@
+// import puppeteer, { ElementHandle, Page } from "puppeteer";
 import puppeteer, { ElementHandle, Page } from "puppeteer-core";
 import sendEmail from "./sendEmail";
 
@@ -21,12 +22,16 @@ enum Agency {
   Funda = "Funda",
 }
 
+function infoWithDate(message: string) {
+  console.info(new Date().toISOString() + ": " + message);
+}
+
 type AgencyProperty = Map<Agency, string[]>;
 
 let spanTexts: Set<string> = new Set<string>();
 
 async function resetAndCreateNewSetOfElements(elements: ElementHandle<any>[]) {
-  console.info("resetting db...");
+  infoWithDate("Resetting db...");
   // Reset the set of elements from scratch
   spanTexts = new Set<string>();
 
@@ -64,7 +69,7 @@ async function createNewSet(page: Page) {
 
 async function crawlPage() {
   const browser = await puppeteer.launch({
-    executablePath: '/usr/bin/chromium-browser',
+    executablePath: "/usr/bin/chromium-browser",
   });
   const page = await browser.newPage();
 
@@ -76,7 +81,7 @@ async function crawlPage() {
     if (elements != null) {
       // If the set already exists:
       if (spanTexts.size > 0) {
-        console.info("Checking if there are changes in the property list...");
+        infoWithDate("Checking if there are changes in the property list...");
 
         let newElements: Set<string> = new Set<string>();
 
@@ -109,7 +114,7 @@ async function crawlPage() {
           await sendEmails(agencyProperties);
 
           // Reset and create new set
-          console.info('resetting...');
+          infoWithDate("resetting...");
           spanTexts = new Set();
           // await resetAndCreateNewSetOfElements(elements);
         }
@@ -129,7 +134,7 @@ async function crawlPage() {
 async function startCrawling() {
   // Run the crawl function every 3 minutes (180 seconds)
   while (true) {
-    console.info("Crawling page...");
+    infoWithDate("Crawling page...");
     await crawlPage();
     await new Promise((resolve) => setTimeout(resolve, 60000));
   }
@@ -139,13 +144,13 @@ await startCrawling();
 
 async function sendEmails(agencyProperties: AgencyProperty) {
   try {
-    console.info("Found new properties! Sending emails...");
+    infoWithDate("Found new properties! Sending emails...");
     const html = ["<h4>Let's submit! Our app found something here:</h4>"];
     for (const [agency, properties] of agencyProperties.entries()) {
       const agencyPropertyHtml = `<span>${agency}:</span>
-               <ul>${properties.map(
-                 (property) => `<li>Property name: ${property}</li>`
-               ).join('')}</ul>`;
+               <ul>${properties
+                 .map((property) => `<li>Property name: ${property}</li>`)
+                 .join("")}</ul>`;
       html.push(agencyPropertyHtml);
     }
 
@@ -163,12 +168,19 @@ async function sendEmails(agencyProperties: AgencyProperty) {
       html: html.join("\n"),
     });
 
-    console.info("Emails successfully sent! 👏");
+    infoWithDate("Emails successfully sent! 👏");
   } catch (err) {
-    console.error(new Error("Could not send emails"));
+    console.error(
+      new Error(new Date().toISOString() + ": Could not send emails")
+    );
     if (err instanceof Error) {
       console.error(err);
-    } else console.error("Could not identify the error type.");
+    } else
+      console.error(
+        new Error(
+          new Date().toISOString() + ": Could not identify the error type."
+        )
+      );
   }
 }
 
