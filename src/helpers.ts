@@ -14,7 +14,7 @@ export function randomTimeRange(bottomBoundaryS = 60, upperBoundaryS = 120): num
   }
   const diff = upperBoundaryS - bottomBoundaryS;
   const randomValue = Math.random() * diff + bottomBoundaryS;
-  const randomValueS =
+  const randomValueMs =
     Number(randomValue.toFixed(DECIMAL_PLACES)) * MS_RATIO;
-  return randomValueS;
+  return randomValueMs;
 }

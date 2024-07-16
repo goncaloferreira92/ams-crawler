@@ -1,5 +1,5 @@
-// import puppeteer, { ElementHandle, Page } from "puppeteer";
-import puppeteer, { ElementHandle, Page } from "puppeteer-core";
+import puppeteer, { ElementHandle, Page } from "puppeteer";
+// import puppeteer, { ElementHandle, Page } from "puppeteer-core";
 import sendEmail from "../sendEmail";
 import { randomTimeRange } from "./helpers";
 import { Agency, type AgencyProperty } from "./types";
@@ -56,7 +56,7 @@ async function createNewSet(page: Page) {
 
 async function crawlPage() {
   const browser = await puppeteer.launch({
-    executablePath: "/usr/bin/chromium-browser",
+    // executablePath: "/usr/bin/chromium-browser",
   });
   const page = await browser.newPage();
 
@@ -120,9 +120,9 @@ async function startCrawling() {
   while (true) {
     infoWithDate("Crawling page...");
     await crawlPage();
-    const randomInterval = randomTimeRange(2, 4);
-    console.log(randomInterval);
-    await new Promise((resolve) => setTimeout(resolve, randomInterval));
+    const randomIntervalMs = randomTimeRange(60, 120); // between 1 and 2 minutes
+    console.log(randomIntervalMs);
+    await new Promise((resolve) => setTimeout(resolve, randomIntervalMs));
   }
 }
 
