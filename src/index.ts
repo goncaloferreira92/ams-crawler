@@ -1,5 +1,5 @@
-import puppeteer, { ElementHandle, Page } from "puppeteer";
-// import puppeteer, { ElementHandle, Page } from "puppeteer-core";
+// import puppeteer, { ElementHandle, Page } from "puppeteer";
+import puppeteer, { ElementHandle, Page } from "puppeteer-core";
 import sendEmail from "../sendEmail";
 import { randomTimeRange } from "./helpers";
 import { Agency, type AgencyProperty } from "./types";
