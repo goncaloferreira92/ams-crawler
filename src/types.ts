@@ -11,3 +11,4 @@ export enum Agency {
 }
 
 export type AgencyProperty = Map<Agency, Set<string>>;
+export type AgencyUrlMap = Map<Agency, string>;

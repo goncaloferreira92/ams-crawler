@@ -6,10 +6,13 @@ import puppeteer, { ElementHandle, Page } from "puppeteer-core";
 import { infoWithDate, randomTimeRange } from "./helpers";
 import { Agency, type AgencyProperty } from "./types";
 import { sendAllEmails } from "./email_service/sendAllEmails";
-import { VESTEDA_CLASS_NAMES, VESTEDA_SEARCH_URL } from "./constants";
+import {
+  AGENCY_URL_MAP,
+  VESTEDA_CLASS_NAMES,
+} from "./constants";
 
 import { initLog } from "./log_service/logService";
-import { testDeletePropertyToCheck } from "./tests";
+// import { testDeletePropertyToCheck } from "./tests";
 
 let fileWriter: FileSink = await initLog();
 
@@ -55,6 +58,21 @@ async function createNewSet(page: Page, agency: Agency) {
       }
       return newElements;
     }
+    case Agency.Funda: {
+      // data-test-id="street-name-house-number"
+      const firstFilter = await page.$$('[data-test-id^=""]');
+      console.log(firstFilter.length);
+      
+      return;
+    }
+    case Agency.Vanderlinden: {
+      infoWithDate(`Not yet implemented for ${agency} agency, skipping...`, fileWriter);
+      return;
+    }
+    case Agency.VB_T: {
+      infoWithDate(`Not yet implemented for ${agency} agency, skipping...`, fileWriter);
+      return;
+    }
   }
 }
 
@@ -67,7 +85,10 @@ function updateAgencyCheckList(agency: Agency, newElements: Set<string>) {
   }
 }
 
-async function crawlAgencies(page: Page, agency: Agency) {
+async function crawlProperties(page: Page, agency: Agency, url: string) {
+  // Load page
+  await page.goto(url);
+
   const elements = await createNewSet(page, agency);
   const spanTexts = agencyCheckList.get(agency);
 
@@ -81,7 +102,7 @@ async function crawlAgencies(page: Page, agency: Agency) {
 
       let newElements: Set<string> = new Set<string>();
       const spanTextsKeys = Array.from(spanTexts);
-
+      
       // Test
       // const previous = Array.from(spanTexts);
       // console.log(previous.length)
@@ -108,7 +129,7 @@ async function crawlAgencies(page: Page, agency: Agency) {
       // Creating a new set
     } else {
       infoWithDate(
-        `Agency ${spanTexts} did not have any entries, resetting...`,
+        `Agency ${agency} did not have any entries, resetting...`,
         fileWriter
       );
       await resetAndCreateNewSetOfElements(elements, agency);
@@ -143,7 +164,7 @@ async function handleNewEntries() {
   }
 }
 
-const listAgencies: Agency[] = [Agency.Vesteda];
+// const listAgencies: Agency[] = [Agency.Vesteda];
 
 async function crawlPage() {
   const browser = await puppeteer.launch({
@@ -153,9 +174,8 @@ async function crawlPage() {
   const page = await browser.newPage();
 
   try {
-    for (const agency of listAgencies) {
-      await page.goto(VESTEDA_SEARCH_URL);
-      await crawlAgencies(page, agency);
+    for (const [agency, url] of AGENCY_URL_MAP) {
+      await crawlProperties(page, agency, url);
       await handleNewEntries();
     }
   } catch (error) {
