@@ -112,7 +112,7 @@ async function startCrawling() {
   while (true) {
     infoWithDate("Crawling page...");
     await crawlPage();
-    const randomIntervalMs = randomTimeRange(3, 4); // between 1 and 2 minutes
+    const randomIntervalMs = randomTimeRange(25, 45); // between 1 and 2 minutes
     console.log(randomIntervalMs);
     await new Promise((resolve) => setTimeout(resolve, randomIntervalMs));
   }
