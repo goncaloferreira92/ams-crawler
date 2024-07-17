@@ -1,19 +1,22 @@
-import puppeteer, { ElementHandle, Page } from "puppeteer";
-// import puppeteer, { ElementHandle, Page } from "puppeteer-core";
-import { randomTimeRange } from "./helpers";
+import type { FileSink } from "bun";
+
+// import puppeteer, { ElementHandle, Page } from "puppeteer";
+import puppeteer, { ElementHandle, Page } from "puppeteer-core";
+
+import { infoWithDate, randomTimeRange } from "./helpers";
 import { Agency, type AgencyProperty } from "./types";
 import { sendAllEmails } from "./email_service/sendAllEmails";
 import { VESTEDA_CLASS_NAMES, VESTEDA_SEARCH_URL } from "./constants";
-import { testDeletePropertyToCheck } from "./tests";
 
-function infoWithDate(message: string) {
-  console.info(new Date().toISOString() + ": " + message);
-}
+import { initLog } from "./log_service/logService";
+// import { testDeletePropertyToCheck } from "./tests";
+
+let fileWriter: FileSink = await initLog();
 
 let spanTexts: Set<string> = new Set<string>();
 
 async function resetAndCreateNewSetOfElements(elements: ElementHandle<any>[]) {
-  infoWithDate("Resetting db...");
+  infoWithDate("Resetting database...", fileWriter);
   // Reset the set of elements from scratch
   spanTexts = new Set<string>();
 
@@ -44,7 +47,7 @@ async function createNewSet(page: Page) {
 
 async function crawlPage() {
   const browser = await puppeteer.launch({
-    // executablePath: "/usr/bin/chromium-browser",
+    executablePath: "/usr/bin/chromium-browser",
   });
   const page = await browser.newPage();
 
@@ -56,7 +59,7 @@ async function crawlPage() {
     if (elements != null) {
       // If the set already exists:
       if (spanTexts.size > 0) {
-        infoWithDate("Checking if there are changes in the property list...");
+        infoWithDate("Checking if there are changes in the property list...", fileWriter);
 
         let newElements: Set<string> = new Set<string>();
 
@@ -90,7 +93,7 @@ async function crawlPage() {
           await sendAllEmails(agencyProperties);
 
           // Reset and create new set
-          infoWithDate("Resetting data as we found an actual property :) ...");
+          infoWithDate("Resetting data as we found an actual property :) ...", fileWriter);
           spanTexts = new Set();
           // await resetAndCreateNewSetOfElements(elements);
         }
@@ -103,16 +106,18 @@ async function crawlPage() {
   } catch (error) {
     console.error("Error during crawling:", error);
   } finally {
+    console.log("called");
     await browser.close();
+    await fileWriter.flush();
   }
 }
 
 async function startCrawling() {
   // Run the crawl function every 3 minutes (180 seconds)
   while (true) {
-    infoWithDate("Crawling page...");
+    infoWithDate("Crawling page...", fileWriter);
     await crawlPage();
-    const randomIntervalMs = randomTimeRange(25, 45); // between 1 and 2 minutes
+    const randomIntervalMs = randomTimeRange(2, 3); // between 1 and 2 minutes
     console.log(randomIntervalMs);
     await new Promise((resolve) => setTimeout(resolve, randomIntervalMs));
   }
