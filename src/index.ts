@@ -117,7 +117,7 @@ async function startCrawling() {
   while (true) {
     infoWithDate("Crawling page...", fileWriter);
     await crawlPage();
-    const randomIntervalMs = randomTimeRange(2, 3); // between 1 and 2 minutes
+    const randomIntervalMs = randomTimeRange(25, 45);
     console.log(randomIntervalMs);
     await new Promise((resolve) => setTimeout(resolve, randomIntervalMs));
   }
