@@ -1,19 +1,23 @@
+import type { FileSink } from "bun";
 import { infoWithDate } from "../helpers";
 import type { AgencyProperty } from "../types";
 import sendEmail from "./sendEmail";
 
-export async function sendAllEmails(agencyProperties: AgencyProperty) {
+export async function sendAllEmails(
+  agencyProperties: AgencyProperty,
+  fileWriter: FileSink
+) {
   try {
-    infoWithDate("Found new properties!");
+    infoWithDate("Found new properties!", fileWriter);
 
-    infoWithDate("Sending emails...");
+    infoWithDate("Sending emails...", fileWriter);
     const html = ["<h4>Let's submit! Our app found something here:</h4>"];
     for (const [agency, properties] of agencyProperties.entries()) {
-      infoWithDate(`Agency: ${agency}`);
+      infoWithDate(`Agency: ${agency}`, fileWriter);
       const agencyPropertyHtml = `<span>${agency}:</span>
-                  <ul>${properties
+                  <ul>${Array.from(properties)
                     .map((property) => {
-                      infoWithDate(`Property name: ${property}`);
+                      infoWithDate(`Property name: ${property}`, fileWriter);
                       return `<li>Property name: ${property}</li>`;
                     })
                     .join("")}</ul>`;
@@ -34,7 +38,7 @@ export async function sendAllEmails(agencyProperties: AgencyProperty) {
       html: html.join("\n"),
     });
 
-    infoWithDate("Emails successfully sent! 👏");
+    infoWithDate("Emails successfully sent! 👏", fileWriter);
   } catch (err) {
     console.error(
       new Error(new Date().toISOString() + ": Could not send emails")

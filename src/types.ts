@@ -10,4 +10,4 @@ export enum Agency {
   Pararius = "Pararius",
 }
 
-export type AgencyProperty = Map<Agency, string[]>;
+export type AgencyProperty = Map<Agency, Set<string>>;
