@@ -20,7 +20,7 @@ async function resetAndCreateNewSetOfElements(
   elements: ElementHandle<any>[],
   agency: Agency
 ) {
-  infoWithDate("Resetting database...", fileWriter);
+  infoWithDate(`Resetting ${agency} database...`, fileWriter);
   // Reset the set of elements from scratch
   agencyCheckList.set(agency, new Set());
   const agencySet = agencyCheckList.get(agency);
@@ -149,7 +149,6 @@ async function crawlProperties(page: Page, agency: Agency, url: string) {
       // console.log(previous.length)
       // console.log(spanTextsKeys.length);
 
-      console.log("chegou aqui");
       for (const textContainer of elements) {
         const text = await textContainer.evaluate(
           (container) => container.textContent

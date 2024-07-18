@@ -10,7 +10,7 @@ export const KOOPS_SEARCH_URL =
   `https://koopsmakelaardij.nl/zoeken`;
 
 export const AGENCY_URL_MAP: AgencyUrlMap = new Map([
-  // [Agency.Vesteda, VESTEDA_SEARCH_URL],
+  [Agency.Vesteda, VESTEDA_SEARCH_URL],
   // [Agency.Funda, FUNDA_SEARCH_URL],
   [Agency.Koops, KOOPS_SEARCH_URL],
 ]);
