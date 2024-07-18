@@ -6,9 +6,13 @@ export const VESTEDA_SEARCH_URL =
 export const FUNDA_SEARCH_URL = 
   `https://www.funda.nl/zoeken/huur?selected_area=["amsterdam"]&publication_date="5"&price="1000-1500"&availability=["available"]`;
 
+export const KOOPS_SEARCH_URL =
+  `https://koopsmakelaardij.nl/zoeken`;
+
 export const AGENCY_URL_MAP: AgencyUrlMap = new Map([
-  [Agency.Vesteda, VESTEDA_SEARCH_URL],
+  // [Agency.Vesteda, VESTEDA_SEARCH_URL],
   // [Agency.Funda, FUNDA_SEARCH_URL],
+  [Agency.Koops, KOOPS_SEARCH_URL],
 ]);
 
 export const VESTEDA_CLASS_NAMES = [

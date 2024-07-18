@@ -6,10 +6,7 @@ import puppeteer, { ElementHandle, Page } from "puppeteer-core";
 import { infoWithDate, randomTimeRange } from "./helpers";
 import { Agency, type AgencyProperty } from "./types";
 import { sendAllEmails } from "./email_service/sendAllEmails";
-import {
-  AGENCY_URL_MAP,
-  VESTEDA_CLASS_NAMES,
-} from "./constants";
+import { AGENCY_URL_MAP, VESTEDA_CLASS_NAMES } from "./constants";
 
 import { initLog } from "./log_service/logService";
 // import { testDeletePropertyToCheck } from "./tests";
@@ -62,16 +59,56 @@ async function createNewSet(page: Page, agency: Agency) {
       // data-test-id="street-name-house-number"
       const firstFilter = await page.$$('[data-test-id^=""]');
       console.log(firstFilter.length);
-      
+
       return;
     }
     case Agency.Vanderlinden: {
-      infoWithDate(`Not yet implemented for ${agency} agency, skipping...`, fileWriter);
+      infoWithDate(
+        `Not yet implemented for ${agency} agency, skipping...`,
+        fileWriter
+      );
       return;
     }
     case Agency.VB_T: {
-      infoWithDate(`Not yet implemented for ${agency} agency, skipping...`, fileWriter);
+      infoWithDate(
+        `Not yet implemented for ${agency} agency, skipping...`,
+        fileWriter
+      );
       return;
+    }
+    case Agency.Koops: {
+      const newElements: ElementHandle<any>[] = [];
+      await page.select('[name="rent_or_sale"]', "rent");
+
+      // await page.select('[name="price_range"]', '0;1500');
+      await page.select('[name="price_range"]', "1500;2000");
+
+      await new Promise((res) => setTimeout(res, 2000));
+
+      const firstFilter = await page.$$(".flex-combine");
+      // const firstFilter = await page.$$(".o-media__title");
+
+      for (const container of firstFilter) {
+        const titleContainer = await container.$(".o-media__title");
+        if (titleContainer != null) {
+          const titleEl = await titleContainer.$("h4");
+          if (titleEl != null) {
+            // const title = await titleContainer.evaluate((el) => el.textContent);
+            newElements.push(titleContainer);
+          }
+        }
+      }
+
+      // const title = await container
+      //   .$(".o-media__title")
+      //   .then((res) => res && res.$(".h4"));
+      // console.log(title);
+      // div class="o-media__title" > h4 > content
+      // div class="street" > content
+      // div class="price" > content > 2nd string
+      // console.log("koops...");
+
+      return newElements;
     }
   }
 }
@@ -90,29 +127,36 @@ async function crawlProperties(page: Page, agency: Agency, url: string) {
   await page.goto(url);
 
   const elements = await createNewSet(page, agency);
-  const spanTexts = agencyCheckList.get(agency);
+  const previousCheckedProperties = agencyCheckList.get(agency);
 
   if (elements != null) {
     // If the set already exists:
-    if (spanTexts != null && spanTexts.size > 0) {
+    if (
+      previousCheckedProperties != null &&
+      previousCheckedProperties.size > 0
+    ) {
       infoWithDate(
         `Checking if there are changes in ${agency}'s the property list...`,
         fileWriter
       );
 
       let newElements: Set<string> = new Set<string>();
-      const spanTextsKeys = Array.from(spanTexts);
-      
+      const spanTextsKeys = Array.from(previousCheckedProperties);
+
       // Test
-      // const previous = Array.from(spanTexts);
+      // const spanTextsKeys = testDeletePropertyToCheck(previousCheckedProperties);
+      // const previous = Array.from(previousCheckedProperties);
       // console.log(previous.length)
-      // const spanTextsKeys = testDeletePropertyToCheck(spanTexts);
       // console.log(spanTextsKeys.length);
 
-      for (const span of elements) {
-        const spanText = await span.evaluate((el) => el.textContent);
-        if (spanText && !spanTextsKeys.includes(spanText)) {
-          newElements.add(spanText);
+      console.log("chegou aqui");
+      for (const textContainer of elements) {
+        const text = await textContainer.evaluate(
+          (container) => container.textContent
+        );
+
+        if (text && !spanTextsKeys.includes(text)) {
+          newElements.add(text);
         }
       }
 
@@ -143,16 +187,16 @@ function resetNewEntries() {
 
 function updateNewEntries(agency: Agency, newElements: Set<string>) {
   for (const newElement of Array.from(newElements)) {
-    console.log(newElement);
+    // console.info(newElement);
     let newEntriesAgency = newEntries.get(agency);
-    console.log(newEntriesAgency);
+    // console.info(newEntriesAgency);
     if (newEntriesAgency != null) {
       newEntriesAgency.add(newElement);
     } else {
       newEntries.set(agency, new Set([newElement]));
     }
   }
-  console.log(newEntries);
+  // console.info(newEntries);
 }
 
 async function handleNewEntries() {
@@ -164,10 +208,9 @@ async function handleNewEntries() {
   }
 }
 
-// const listAgencies: Agency[] = [Agency.Vesteda];
-
 async function crawlPage() {
   const browser = await puppeteer.launch({
+    // headless: false,
     executablePath: "/usr/bin/chromium-browser",
   });
 
@@ -187,12 +230,11 @@ async function crawlPage() {
 }
 
 async function startCrawling() {
-  // Run the crawl function every 3 minutes (180 seconds)
   while (true) {
     infoWithDate("Crawling page...", fileWriter);
     await crawlPage();
     // const randomIntervalMs = randomTimeRange(3, 4);
-    const randomIntervalMs = randomTimeRange(25, 45);
+    const randomIntervalMs = randomTimeRange(10, 25);
     console.log(randomIntervalMs);
     await new Promise((resolve) => setTimeout(resolve, randomIntervalMs));
   }
